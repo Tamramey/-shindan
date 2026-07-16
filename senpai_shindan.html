@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蕎麦屋の先輩・脈あり診断</title>
+<style>
+  :root{
+    --ai:#274472;        /* 藍 */
+    --ai-2:#3a5a8c;
+    --kinari:#f6f1e3;    /* 生成り */
+    --sumi:#2b2b2b;      /* 墨 */
+    --soba:#8a6d4b;      /* 蕎麦の茶 */
+    --aka:#b4483f;       /* 差し色の朱 */
+    --line:#d9cfb8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+    background:
+      radial-gradient(circle at 20% 10%, #fbf7ec 0, transparent 40%),
+      radial-gradient(circle at 80% 90%, #f2ead6 0, transparent 45%),
+      var(--kinari);
+    color:var(--sumi);
+    min-height:100vh;
+    display:flex;justify-content:center;
+    padding:18px;
+  }
+  .wrap{width:100%;max-width:460px;margin:auto;}
+  .noren{
+    background:var(--ai);
+    color:var(--kinari);
+    border-radius:14px 14px 6px 6px;
+    padding:20px 18px 22px;
+    text-align:center;
+    position:relative;
+    box-shadow:0 10px 30px rgba(39,68,114,.28);
+  }
+  .noren:before{
+    content:"";position:absolute;left:12%;right:12%;top:0;height:4px;
+    background:repeating-linear-gradient(90deg,var(--kinari) 0 22px,transparent 22px 30px);
+    opacity:.35;border-radius:4px;
+  }
+  .noren .sub{font-size:12px;letter-spacing:.35em;opacity:.8;margin:6px 0 2px;}
+  .noren h1{font-size:23px;margin:6px 0 4px;letter-spacing:.08em;font-weight:600;}
+  .noren .mon{
+    display:inline-block;margin-top:10px;width:44px;height:44px;line-height:44px;
+    border:2px solid var(--kinari);border-radius:50%;font-size:20px;opacity:.9;
+  }
+  .card{
+    background:#fffdf7;border:1px solid var(--line);
+    border-radius:12px;padding:22px 20px;margin-top:16px;
+    box-shadow:0 6px 18px rgba(138,109,75,.12);
+  }
+  .lead{font-size:14.5px;line-height:1.9;color:#4a4438;}
+  .lead b{color:var(--ai);}
+  .btn{
+    display:block;width:100%;border:none;cursor:pointer;
+    background:var(--aka);color:#fff;font-family:inherit;
+    font-size:16px;letter-spacing:.12em;padding:14px;border-radius:10px;
+    margin-top:18px;transition:.15s;box-shadow:0 4px 0 #8f342d;
+  }
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8f342d;}
+  .btn.ghost{background:#fff;color:var(--ai);border:1.5px solid var(--ai);box-shadow:0 4px 0 #c3b79b;}
+  .btn.ghost:active{box-shadow:0 1px 0 #c3b79b;}
+  .meta{font-size:11.5px;color:#9a8f78;text-align:center;margin-top:14px;line-height:1.7;letter-spacing:.03em;}
+
+  /* progress */
+  .prog-wrap{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .prog-bar{flex:1;height:8px;background:#eadfc6;border-radius:6px;overflow:hidden;}
+  .prog-fill{height:100%;width:0;background:linear-gradient(90deg,var(--ai),var(--ai-2));transition:width .35s;}
+  .prog-txt{font-size:12px;color:var(--soba);white-space:nowrap;}
+
+  .q-no{font-size:12px;letter-spacing:.3em;color:var(--aka);margin-bottom:6px;}
+  .q-text{font-size:17px;line-height:1.7;margin:0 0 16px;font-weight:600;color:var(--sumi);}
+  .opt{
+    display:block;width:100%;text-align:left;background:#fff;
+    border:1.5px solid var(--line);border-radius:10px;
+    padding:13px 15px;margin-bottom:11px;font-family:inherit;font-size:14.5px;
+    line-height:1.6;color:var(--sumi);cursor:pointer;transition:.13s;
+  }
+  .opt:active{transform:scale(.985);}
+  .opt:hover{border-color:var(--ai);background:#fbf9f1;}
+
+  /* result */
+  .score-ring{
+    width:170px;height:170px;margin:6px auto 4px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;position:relative;
+    background:conic-gradient(var(--aka) 0, var(--aka) var(--deg,0deg), #eadfc6 var(--deg,0deg));
+    transition:background 1s ease;
+  }
+  .score-ring:after{content:"";position:absolute;inset:14px;background:#fffdf7;border-radius:50%;}
+  .score-in{position:relative;text-align:center;z-index:1;}
+  .score-in .num{font-size:46px;font-weight:700;color:var(--aka);line-height:1;}
+  .score-in .pct{font-size:16px;color:var(--soba);}
+  .score-in .lbl{font-size:11px;letter-spacing:.3em;color:#9a8f78;margin-bottom:4px;}
+  .verdict{text-align:center;font-size:20px;font-weight:600;color:var(--ai);margin:8px 0 2px;letter-spacing:.06em;}
+  .comment{font-size:14px;line-height:1.95;color:#4a4438;margin-top:12px;}
+  .advice{background:#f4efe0;border-left:4px solid var(--soba);border-radius:0 8px 8px 0;padding:12px 14px;margin-top:16px;font-size:13.5px;line-height:1.85;color:#5a5140;}
+  .advice b{color:var(--soba);}
+  .hide{display:none;}
+  .fade{animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="noren">
+    <div class="sub">の れ ん を く ぐ る</div>
+    <h1>蕎麦屋の先輩・脈あり診断</h1>
+    <div class="mon">蕎</div>
+  </div>
+
+  <!-- INTRO -->
+  <div class="card fade" id="intro">
+    <p class="lead">
+      バイト先の蕎麦屋さん、<b>6コ上の先輩</b>。<br>
+      あの人の何気ない行動、実はサインかも…？<br><br>
+      全<b id="qcount">10</b>問の質問に、正直に答えてみてください。<br>
+      先輩の「脈あり度」を、こっそり診断します。
+    </p>
+    <button class="btn" onclick="start()">診断をはじめる</button>
+    <p class="meta">※これはお遊びの診断です。答え合わせは、いつかあなたの勇気で。</p>
+  </div>
+
+  <!-- QUESTION -->
+  <div class="card hide" id="quiz">
+    <div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="fill"></div></div>
+      <div class="prog-txt" id="ptxt">1 / 10</div>
+    </div>
+    <div class="q-no" id="qno">第 一 問</div>
+    <p class="q-text" id="qtext"></p>
+    <div id="opts"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="card hide" id="result">
+    <div class="score-ring" id="ring">
+      <div class="score-in">
+        <div class="lbl">脈 あ り 度</div>
+        <span class="num" id="scoreNum">0</span><span class="pct">%</span>
+      </div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="comment" id="comment"></div>
+    <div class="advice" id="advice"></div>
+    <button class="btn ghost" onclick="location.reload()">もう一度診断する</button>
+    <p class="meta">診断はあくまで参考に。<br>本当の気持ちは、先輩の中にしかありません。</p>
+  </div>
+</div>
+
+<script>
+const KANJI=["一","二","三","四","五","六","七","八","九","十"];
+const questions=[
+  {q:"お店が一番忙しいピークの時間。先輩はあなたに対して…",
+   a:[["自然にフォローに入って、さりげなく助けてくれる",3],
+      ["『大丈夫？』ってひと声かけてくれる",2],
+      ["自分の仕事で手一杯、特に絡みはない",1],
+      ["ピリついてて、ちょっと当たりが強い",0]]},
+  {q:"シフトが被る頻度、どんな感じ？",
+   a:[["気づけばよく一緒。合わせてくれてる…気がする",3],
+      ["わりと被る方だと思う",2],
+      ["半々くらい、普通",1],
+      ["ほとんど被らない",0]]},
+  {q:"まかないや休憩のとき、先輩は…",
+   a:[["向こうから話しかけてきて、隣に来ることが多い",3],
+      ["近くにいると話す。自然な感じ",2],
+      ["みんなでいる時に少し話すくらい",1],
+      ["だいたい静かにスマホ見てる",0]]},
+  {q:"連絡先（LINEなど）は？",
+   a:[["交換済み。用がなくても連絡が来る",3],
+      ["交換済み。シフトや業務の話で時々やりとり",2],
+      ["交換はしたけど、ほぼ動いてない",1],
+      ["まだ交換してない",0]]},
+  {q:"先輩はあなたのこと、なんて呼ぶ？",
+   a:[["下の名前 or あだ名で呼んでくれる",3],
+      ["苗字を呼び捨て・ちゃん付けなど砕けた感じ",2],
+      ["『さん』付けでちゃんとした感じ",1],
+      ["名前で呼ばれた記憶がない",0]]},
+  {q:"あなたがミスして落ち込んでる時、先輩は…",
+   a:[["さりげなくフォローして『気にすんな』と励ましてくれる",3],
+      ["普通に教え直してくれる",2],
+      ["特に何も。淡々としてる",1],
+      ["ちょっと呆れられた気がする",0]]},
+  {q:"休みの日に何してるか、とか。プライベートの話は…",
+   a:[["向こうからよく聞いてくる。趣味とかも把握されてる",3],
+      ["話の流れで少し聞かれることがある",2],
+      ["こっちから話せば聞いてくれる",1],
+      ["ほぼ仕事の話しかしない",0]]},
+  {q:"店内でふと視線を感じて振り向くと…",
+   a:[["わりと目が合う。合うとちょっと笑ってくれる",3],
+      ["たまに合う。合うとそらされる（照れ？）",2],
+      ["特に意識したことない",1],
+      ["まず合わない",0]]},
+  {q:"差し入れ・おごり・お裾分けの類は？",
+   a:[["『これあげる』ってあなたに何かくれることがある",3],
+      ["みんなに配るついでにくれる",2],
+      ["特にない",1],
+      ["逆にこっちが気を使う側",0]]},
+  {q:"バイト終わり、帰り道やこの後の予定について…",
+   a:[["『この後ヒマ？』的な、二人になろうとする素振りがある",3],
+      ["帰る方向が一緒だと自然と一緒に帰る",2],
+      ["『お疲れ』で普通に解散",1],
+      ["先輩はいつもサッと帰る",0]]}
+];
+
+let idx=0, score=0;
+const maxScore=questions.length*3;
+document.getElementById('qcount').textContent=questions.length;
+document.getElementById('ptxt').textContent=`1 / ${questions.length}`;
+
+function start(){
+  document.getElementById('intro').classList.add('hide');
+  const quiz=document.getElementById('quiz');
+  quiz.classList.remove('hide');quiz.classList.add('fade');
+  render();
+}
+function render(){
+  const cur=questions[idx];
+  document.getElementById('qno').textContent=`第 ${KANJI[idx]} 問`;
+  document.getElementById('qtext').textContent=cur.q;
+  document.getElementById('ptxt').textContent=`${idx+1} / ${questions.length}`;
+  document.getElementById('fill').style.width=`${(idx/questions.length)*100}%`;
+  const box=document.getElementById('opts');
+  box.innerHTML='';
+  cur.a.forEach(([label,val])=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=label;
+    b.onclick=()=>choose(val);
+    box.appendChild(b);
+  });
+}
+function choose(val){
+  score+=val;idx++;
+  if(idx<questions.length){
+    const quiz=document.getElementById('quiz');
+    quiz.classList.remove('fade');void quiz.offsetWidth;quiz.classList.add('fade');
+    render();
+  }else{
+    showResult();
+  }
+}
+function showResult(){
+  document.getElementById('fill').style.width='100%';
+  document.getElementById('quiz').classList.add('hide');
+  const res=document.getElementById('result');
+  res.classList.remove('hide');res.classList.add('fade');
+
+  const pct=Math.round((score/maxScore)*100);
+  // animate ring + number
+  const ring=document.getElementById('ring');
+  ring.style.setProperty('--deg', (pct*3.6)+'deg');
+  let n=0;const num=document.getElementById('scoreNum');
+  const timer=setInterval(()=>{ n++; num.textContent=n; if(n>=pct)clearInterval(timer); },14);
+
+  let v,c,ad;
+  if(pct>=80){
+    v="脈あり、かなり濃いめ 🍲";
+    c="これは…つゆの効いた本命の予感。先輩の行動、あなたに向けた特別なものがかなり混ざっています。無意識でここまでは、なかなかしません。向こうも実はドキドキしてるかも。";
+    ad="<b>おすすめの一手：</b>次に二人で話せた時、『先輩っていつも助けてくれますよね、ありがとうございます』と一度ちゃんと言葉にしてみて。距離が一気に縮まる合図になります。";
+  }else if(pct>=55){
+    v="脈あり、ほんのり温かい ♨";
+    c="脈がないわけじゃない、むしろ好感度は高め。少なくとも『気にかけてくれる後輩』としては確実に大事にされています。あと一歩、きっかけ次第で温度が上がるゾーンです。";
+    ad="<b>おすすめの一手：</b>業務以外の会話を少しだけ増やしてみましょう。『まかない、何が好きですか？』みたいな軽い質問から。返しの丁寧さで、先輩の温度が測れます。";
+  }else if(pct>=30){
+    v="まだ、ゆで加減の見極め中 ⏳";
+    c="今のところは『いい先輩と後輩』の距離感。悪くはないけれど、恋愛のサインと言い切るには材料が少なめ。ここからは接点をどれだけ作れるかで変わってきます。焦らずコトコト。";
+    ad="<b>おすすめの一手：</b>まずは先輩に頼る回数を少し増やして。人は『助けた相手』を自然と気にかけるようになります。小さな『教えてください』を積み重ねてみて。";
+  }else{
+    v="今はまだ、水と粉の状態 🌾";
+    c="残念ながら、現時点では恋愛の手応えは薄め。でも落ち込まないで。蕎麦だって、最初はただの粉と水。ここから打って、こねて、繋いでいくもの。関係はこれから作れます。";
+    ad="<b>おすすめの一手：</b>まずは『話しやすい後輩』になることから。挨拶と笑顔、そして先輩の仕事をよく見て一つ盗む。信頼が土台になって、その先が生まれます。";
+  }
+  document.getElementById('verdict').textContent=v;
+  document.getElementById('comment').innerHTML=c;
+  document.getElementById('advice').innerHTML=ad;
+}
+</script>
+</body>
+</html>
